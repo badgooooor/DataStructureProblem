@@ -1,156 +1,124 @@
- # Simple node and linked list.
-
-# This is a normal good-looking node.
-class node:
+class Node:
     def __init__(self, data, next=None):
-        if next == None:
-            self.data = data
-            self.next = None
-        else:
-            self.data = data
-            self.next = next
-
-    def getData(self):
-        return self.data
-
-    def setNext(self, next):
+        self.data = data
         self.next = next
 
-    def getNext(self):
-        return self.next
-
-# Linked list.
-class LinkedList:
+class List:
     def __init__(self, head=None):
-        if head != None:
-            self.head = head
-            self.len = 1
-        else:
+        self.cutPercent = []
+        self.rifflePercent = []
+        if head == None:
             self.head = None
-            self.len = 0
-
+            self.size = 0
+        else:
+            self.head = head
+            self.size = 1
+    
     def __str__(self):
-        result = []
-        curr = self.head
-        while curr:
-            result.append(curr.getData())
-            curr = curr.getNext()
-        return result
+        r = []
+        c = self.head
+        while c != None:
+            r.append(c.data)
+            c = c.next
+        return r
 
-    # insert methods
-    def append(self, data):
-        new = node(data)
+    def add(self,value):
+        new = Node(value)
+        self.size = self.size + 1
         if self.head == None:
             self.head = new
         else:
-            r = self.head
-            while r.getNext() != None:
-                r = r.getNext()
-            r.next = new
-        self.len += 1
-    
-    # find methods
-    def search(self, data):
-        curr = self.head
-        count = 0
-        while curr:
-            if curr.getData() == data:
-                return count
-            curr = curr.getNext()
-            count += 1
-        return False
+            c = self.head
+            while c.next != None:
+                c = c.next
+            c.next = new
 
-    def searchfromPos(self, target):
-        curr = self.head
-        pos = 1
-        if target > self.size():
-            return False
-        else:
-            while pos < target:
-                curr = curr.getNext()
-                pos += 1
-            return curr
-
-    def before(self, data):
-        prev = None
-        curr = self.head
-        while curr:
-            if curr.getData() == data and prev != None:
-                return prev
-            prev = curr
-            curr = curr.getNext()
-        return False
-    
-    # delete methods
-    def remove(self, data):
-        prev = None
-        curr = self.head
-        while curr:
-            if curr.getData() == data:
-                # Data is at head
-                if prev == None:
-                    self.head = curr.getNext()
+    def remove(self,target):
+        c = self.head
+        p = None
+        while c:
+            if c.data == target:
+                if p == None:
+                    self.head = c.next
                 else:
-                    prev.setNext(curr.getNext())
-                self.len -= 1
+                    p.next = c.next
+                self.size = self.size - 1
                 return True
-            prev = curr
-            curr = curr.getNext()
-        return False
+            p = c
+            c = c.next
+        return False   
 
-    def setHead(self, node):
-        self.head = node
+    def getNode(self, pos):     
+        c = self.head
+        i = 1
+        while i < pos:
+            c = c.next
+            i = i + 1
+        return c
 
-    # size
+    def bottomUp(self, percent, add=True):
+        pos = int(self.size * (percent/100))
+        if add:
+            self.cutPercent.append(percent)
+
+        c1 = self.getNode(pos)
+        c2 = self.getNode(pos+1)
+        last = self.getNode(self.size)
+        
+        last.next = self.head
+        self.head = c2
+        c1.next = None
+
+        print('Bottom Up ',percent,'% : ',self.__str__())
+
+    def riffle(self, percent, add=True):
+        pos = int(self.size * (percent/100))
+        if add:
+            self.rifflePercent.append(percent)
+
+        a1 = self.head
+        a2 = self.getNode(pos)
+        b1 = self.getNode(pos+1)
+        b2 = self.getNode(self.size)
+        a2.next = None
+        self.head = b1
+
+        ac1 = a1
+        ac2 = a1.next
+        bc1 = b1
+        bc2 = b1.next
+
+        i = 1
+        while i < pos:
+            bc1.next = ac1
+            ac1.next = bc2
+            
+            ac1 = ac2
+            bc1 = bc2
+            ac2 = ac2.next
+            bc2 = bc2.next
+            i = i + 1
+        bc1.next = ac1
+        ac1.next = bc2
+
+        print('Shuffle ',percent,'% : ',self.__str__())
+
     def isEmpty(self):
-        return self.len == 0
-        
-    def size(self):
-        return self.len
+        return self.size == 0
 
 
-class Sentence(LinkedList):
-    def __init__(self, data):
-        self.cutPercent = []
-        self.rifflePercent = []
-        super().__init__()
-        for word in data.split(" "):
-            super().append(word)
-    
-    def cut(self, percent):
-        self.cutPercent.append(percent)
-        cutPos = int(super().size() * (percent / 100))
-        lowestCut = super().searchfromPos(cutPos)
-        lowestTwo = super().before(lowestCut.getData())
-        afterCut = super().searchfromPos(cutPos + 1)
-        tail = super().searchfromPos(super().size())
-        head = super().searchfromPos(1)
-        
-        # Bottom-up
-        tail.setNext(head)
-        super().setHead(afterCut)
-        lowestCut.setNext(None)
-        print("Bottom Up " ,str(percent), "% :" , super().__str__())
-
-    def percentCut(self):
-        return self.cutPercent.__str__()
-
-    def deCutAll(self):
-        print("-- De-cut -------------------------------------")
-        for x in reversed(self.cutPercent):
-            self.cut(x)
-            self.cutPercent.remove(x)
-        self.cutPercent = []
-    
-    def riffle(self, percent):
-        print("Riffle ",str(percent),"% :", super().__str__())
-
-
-text = Sentence("Transquily Base : Hotel and Casino .")
-print(text.__str__())
-print(text.size())
-text.cut(50)
-text.cut(40)
-text.cut(30)
-print(text.deCutAll())
-text.riffle(50)
+# Test
+l = List()
+l.add(1)
+l.add(2)
+l.add(3)
+l.add(4)
+l.add(5)
+l.add(6)
+l.add(7)
+l.add(8)
+l.add(9)
+l.add("Hey!")
+print('Original List : ',l.__str__())
+l.bottomUp(30)
+l.riffle(30)
